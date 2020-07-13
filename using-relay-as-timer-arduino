@@ -1,0 +1,73 @@
+// This code sets a timer to use on a relay
+// To use it properly, you'll need an Arduino, a Relay module and a RTC DS3231 module
+// Written by sadrisco 
+
+
+#include <Wire.h> 
+#include "RTClib.h" 
+#define Relay 4
+
+//declares RTC DS3231 module
+RTC_DS3231 rtc; 
+
+//defines the clock timer (24 hour format)
+const int OnHour = 18;
+const int OnMin = 24;
+const int OffHour = 18; 
+const int OffMin = 30;
+
+
+//declares the days of week
+char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+
+void setup(){
+  Serial.begin(9600); 
+  pinMode(Relay, OUTPUT);
+  digitalWrite(Relay, HIGH);
+  
+  //forces rtc start
+  //if its not connected on protoboard/circuit, runs bellow
+  if(! rtc.begin()) { 
+    Serial.println("DS3231 not found");
+    while(1);
+  }
+  // if RTC has lost the energy, battery or first connection
+  if(rtc.lostPower()){ 
+    Serial.println("DS3231 OK!");
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); 
+  }
+  
+  delay(100);
+}
+
+void loop () {
+    DateTime now = rtc.now(); 
+    Serial.print("Date: "); 
+    Serial.print(now.day(), DEC); 
+    Serial.print('/'); 
+    Serial.print(now.month(), DEC); 
+    Serial.print('/'); 
+    Serial.print(now.year(), DEC);
+    Serial.print(" / Day: ");
+    Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
+    Serial.print(" / Hour: ");
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+    Serial.print(now.second(), DEC);
+    Serial.println();
+    delay(1000);
+
+ 
+  if(now.hour() == OnHour && now.minute() == OnMin){ 
+      digitalWrite(Relay,LOW);
+      Serial.println("Power On");
+    }
+    
+    else if(now.hour() == OffHour && now.minute() == OffMin){
+      digitalWrite(Relay,HIGH);
+      Serial.println("Power Off");
+    }
+    
+}
